@@ -5,6 +5,10 @@ project(DeviceAdapter
         DESCRIPTION "An example Micro-Manager device adapter project with CMake"
         LANGUAGES CXX)
 
+# Micro-Manager's code makes heavy use of dynamic exceptions, which MSVC doesn't complain about.
+# Other compilers, however, enforce the C++ standard which has deprecated dynamic exceptions since C++17
+set(CMAKE_CXX_STANDARD 14)
+
 # Save our binaries to the `libraries` folder, so they are easier to find
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/device_adapters")
 
@@ -13,8 +17,8 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/device_adapters")
 # For now, we're telling it which files to use.
 add_library(DeviceAdapter SHARED MMApi.cpp DemoShutterDevice.cpp DemoShutterDevice.hpp)
 
-# Using C++ 20
-target_compile_features(DeviceAdapter PUBLIC cxx_std_20)
+# Using C++ 14. Same reason as above.
+target_compile_features(DeviceAdapter PUBLIC cxx_std_14)
 
 # Make our headers available to callers of the DLL
 target_include_directories(DeviceAdapter PUBLIC .)
@@ -35,10 +39,17 @@ file(GLOB HEADERS "${MM_SOURCE}/*.h")
 
 # Create a Micro-Manager target including all of the source files we found above
 add_library(Micro-Manager STATIC ${SOURCES} ${HEADERS})
+target_compile_features(Micro-Manager PUBLIC cxx_std_14)
 target_include_directories(Micro-Manager PUBLIC ${MM_SOURCE})
 
 # Micro-manager's source uses this flag to define the DLL exported functions
 add_compile_definitions(MODULE_EXPORTS)
+
+# This is required to compile correctly with non-MSVC compilers, since Micro-Manager defines it's own timezone struct
+# Luckily if you pass this flag, the Micro-Manager macros skip that step.
+if (NOT CMAKE_CXX_COMPILER_IDN STREQUAL "MSVC")
+    add_compile_definitions(MMDEVICE_NO_GETTIMEOFDAY)
+endif()
 
 # We now link our DeviceAdapter with Micro-Manager
 target_link_libraries(DeviceAdapter PUBLIC Micro-Manager)

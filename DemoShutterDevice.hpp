@@ -10,8 +10,8 @@ namespace demo {
         explicit DemoShutterDevice() = default;
         ~DemoShutterDevice() override = default;
 
-        inline static const char* NAME = "CMade shutter";
-        inline static const char* DESCRIPTION = "A mock device adapter whose code can be managed by CMake";
+        constexpr static const char* NAME = "CMade shutter";
+        constexpr static const char* DESCRIPTION = "A mock device adapter whose code can be managed by CMake";
 
         // MMDevice API
         int Initialize() override {
